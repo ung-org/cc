@@ -1,0 +1,10 @@
+cc
+c89
+c99
+lint
+cflow
+ctags
+*.o
+trigraph.c
+*.tab.c
+*.tab.h
