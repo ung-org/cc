@@ -42,6 +42,12 @@ $(OBJDIR)/cpp.o: $(SRCDIR)/cpp.c
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/cpp.c
 
+$(BINDIR)/cc: $(OBJDIR)/libs.o
+$(OBJDIR)/libs.o: $(SRCDIR)/cc.h
+$(OBJDIR)/libs.o: $(SRCDIR)/libs.c
+	@mkdir -p $(@D)
+	$(CC) $(CFLAGS) -o $@ -c $(SRCDIR)/libs.c
+
 $(BINDIR)/cc:
 	@mkdir -p $(@D)
 	$(LD) $(LDFLAGS) -o $@ $(OBJDIR)/*.o $(LDLIBS)

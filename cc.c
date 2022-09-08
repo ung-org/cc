@@ -1,12 +1,15 @@
 #define _XOPEN_SOURCE 700
 #include <errno.h>
 #include <libgen.h>
+#include <limits.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <unistd.h>
 
 #include "cc.h"
+#include "libs.h"
 #include "cpp.h"
 #include "link.h"
 #include "version.h"
@@ -87,10 +90,13 @@ static int getoptarg(char *argv[], int i, char **arg)
 int main(int argc, char *argv[])
 {
 	enum { PREPROCESSED, ASSEMBLY, OBJECT, BINARY } output = BINARY;
-	char *progname = basename(argv[0]);
 	char *output_path = "a.out";
+	char *inputs[argc];
+	int ninputs = 0;
 
 	struct macro *predef = do_predefs(argv[0]);
+
+	addlibdir("/lib/x86_64-linux-gnu", 0);
 
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-c")) {
@@ -124,9 +130,10 @@ int main(int argc, char *argv[])
 			//include(path);
 
 		} else if (!strncmp(argv[i], "-L", 2)) {
+			/* TODO: add to inputs[] */
 			char *path = NULL;
 			i += getoptarg(argv, i, &path);
-			//libpath(path);
+			addlibdir(path, 1);
 
 		} else if (!strncmp(argv[i], "-O", 2)) {
 			/* optimize */
@@ -137,21 +144,42 @@ int main(int argc, char *argv[])
 			//undef(macro);
 
 		} else if (!strncmp(argv[i], "-l", 2)) {
+			/* TODO: add to inputs[] */
 			char *lib = NULL;
 			i += getoptarg(argv, i, &lib);
-			//addobj(lib);
+			inputs[ninputs++] = findlib(lib);
 
 		} else if (argv[i][0] == '-') {
-			fprintf(stderr, "%s: unknown option %s\n", progname, argv[i]);
-			/* invalid option */
+			error(NULL, 1, "unknown options '%s'\n", argv[i]);
+
 		} else {
-			switch (output) {
-			case PREPROCESSED:
-				preprocess(argv[i], output_path, predef);
-				break;
-			default:
-				break;	
-			}
+			inputs[ninputs++] = argv[i];
 		}
 	}
+
+	for (int i = 0; i < ninputs; i++) {
+		if (!strcmp(inputs[i], "")) {
+			continue;
+		}
+
+		fprintf(stderr, "%s\n", inputs[i]);
+
+		//preprocess
+		//compile
+		//analyze
+		//optimize
+		//assemble
+
+		switch (output) {
+		case PREPROCESSED:
+			preprocess(inputs[i], output_path, predef);
+			break;
+		default:
+			break;	
+		}
+	}
+
+	//optimize?
+	//link
+	//strip
 }
