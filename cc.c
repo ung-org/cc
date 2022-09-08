@@ -96,8 +96,6 @@ int main(int argc, char *argv[])
 
 	struct macro *predef = do_predefs(argv[0]);
 
-	addlibdir("/lib/x86_64-linux-gnu", 0);
-
 	for (int i = 1; i < argc; i++) {
 		if (!strcmp(argv[i], "-c")) {
 			output = OBJECT;
