@@ -1,10 +1,9 @@
 cc
 c89
 c99
+c11
+c18
 lint
 cflow
 ctags
 *.o
-trigraph.c
-*.tab.c
-*.tab.h
