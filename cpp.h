@@ -1,11 +1,17 @@
 #ifndef CPP_H
 #define CPP_H
-#include <stdio.h>
+#include <stdint.h>
 
-int preprocess(FILE *in, FILE *out, long int version);
-void define(const char *macro, const char *replacement);
-void undef(const char *macro);
-int defined(const char *macro);
-void include(const char *path);
+struct macro {
+	char *file;
+	uintmax_t line;
+	char *identifier;
+	char *replacement;
+	struct macro *next;
+};
+
+int preprocess(const char *infile, const char *outfile, struct macro *predefined_list);
+struct macro *define(struct macro *list, const char *file, uintmax_t line, const char *macro, const char *replacement);
+struct macro *undef(struct macro *list, const char *macro);
 
 #endif
