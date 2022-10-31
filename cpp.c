@@ -1,4 +1,6 @@
 #define _XOPEN_SOURCE 700
+#include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +23,50 @@ static void dump(struct macro *list)
 	}
 }
 
+static char *next_token(FILE *f, const char *fn, uintmax_t line)
+{
+	char *token = NULL;
+	size_t tlen = 0;
+	size_t pos = 0;
+	int c = 0;
+	while ((c = fgetc(f)) != EOF) {
+		if (isspace(c)) {
+			if (pos == 0) {
+				return " ";
+			}
+			ungetc(c, f);
+			return token;
+		}
+
+		if (strchr("+-*/=<>!&|[]{}()'\"", c)) {
+			if (pos == 0) {
+				token = calloc(2, 1);
+				token[0] = c;
+				return token;
+			}
+			ungetc(c, f);
+			return token;
+		}
+
+		if (pos >= tlen) {
+			tlen += 16;
+			char *tmp = realloc(token, tlen);
+			if (!tmp) {
+				error(fn, line, "out of memory");
+			}
+			token = tmp;
+			memset(token + pos, '\0', tlen - pos);
+		}
+		token[pos++] = c;
+	}
+
+	if (pos == 0) {
+		return NULL;
+	}
+
+	return token;
+}
+
 int preprocess(const char *in, const char *out, struct macro *predefined)
 {
 	(void)in; (void)out;
@@ -39,6 +85,18 @@ int preprocess(const char *in, const char *out, struct macro *predefined)
 
 	dump(predefined);
 	dump(perfile);
+
+	FILE *f = fopen(in, "r");
+	if (f == NULL) {
+		error(NULL, 0, "%s: %s\n", in, strerror(errno));
+	}
+
+	char *token;
+	while ((token = next_token(f, in, 0)) != NULL) {
+		printf("%s\n", token);
+	}
+
+	fclose(f);
 
 	return 0;
 }
